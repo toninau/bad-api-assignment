@@ -16,13 +16,12 @@ export let productData: Product[] = [];
 export const fetchProducts = async (): Promise<void> => {
   const productsArrays = await Promise.all(productTypes.map(async (category) => {
     const { data } = await axios.get<Product[]>(`https://bad-api-assignment.reaktor.com/v2/products/${category}`);
-    return data.map(value => ({ ...value, availability: 'REFRESH' }));
+    return data.map(value => ({ ...value, availability: 'RETRIEVING' }));
   }));
   const products = productsArrays.flat(1);
   // For initialization and server restarts,
   // so there is something to show when availability is getting fetched
   if (Array.isArray(productData) && !productData.length) {
-    console.log('initial data retrieved', Date.now());
     productData = products;
   }
   const manufacturers = [...new Set(products.map(item => item.manufacturer))];
@@ -54,5 +53,4 @@ export const fetchProducts = async (): Promise<void> => {
   }));
   const productsWithAvailability = productsWithAvailabilityArrays.flat(1);
   productData = productsWithAvailability;
-  console.log('data updated, time: ', Date.now());
 };

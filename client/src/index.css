@@ -1,0 +1,86 @@
+* {
+  padding: 0;
+  margin: 0;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.container {
+  height: 100vh;
+}
+
+.top-nav {
+  top: 0; 
+  position: fixed;
+  width: 100%;
+  background: #353535;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 50px;
+}
+
+.top-nav > button {
+  background-color: transparent;
+  border: none;
+  color: #E3E3E3;
+  padding: 0 1.5em;
+  height: 50px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 16px;
+  cursor: pointer;
+  outline: none;
+  border-bottom: 2px solid transparent;
+  flex: 1 1 0px;
+}
+
+.top-nav > button:hover {
+  color: #D0E562;
+}
+
+.top-nav > button#active {
+  color: #D0E562;
+  border-bottom: 2px solid #D0E562;
+}
+
+.content {
+  margin-top: 50px;
+  overflow-x: auto;
+}
+
+.content__message {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 24px;
+  font-weight: 600;
+  text-align: center;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table thead {
+  border-bottom: 1px solid #e3e3e3;
+  color: #353535;
+}
+
+.table tbody tr:nth-child(even) {
+  background-color: #e3e3e3;
+}
+
+.table th, td {
+  text-align: left;
+  padding: 5px;
+}

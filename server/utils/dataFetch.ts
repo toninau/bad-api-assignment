@@ -1,56 +1,57 @@
 import axios from 'axios';
-import { Product } from '../types';
-
-type Availability = {
-  code: number;
-  response: Array<{
-    id: string;
-    DATAPAYLOAD: string;
-  }>
-};
-
-const productTypes = ['beanies', 'gloves', 'facemasks'];
+import { Product, LegacyProduct, Availability } from '../types';
+import { baseURL, productTypes } from '../constants';
 
 export let productData: Product[] = [];
 
-export const fetchProducts = async (): Promise<void> => {
-  const productsArrays = await Promise.all(productTypes.map(async (category) => {
-    const { data } = await axios.get<Product[]>(`https://bad-api-assignment.reaktor.com/v2/products/${category}`);
-    return data.map(value => ({ ...value, availability: 'RETRIEVING' }));
-  }));
-  const products = productsArrays.flat(1);
-  // For initialization and server restarts,
-  // so there is something to show when availability is getting fetched
+export const updateProductData = async (): Promise<void> => {
+  const products = await getProducts();
+  // For initialization and server restarts, so there
+  // is something to show when availability is getting fetched
   if (Array.isArray(productData) && !productData.length) {
     productData = products;
   }
   const manufacturers = [...new Set(products.map(item => item.manufacturer))];
-  // Adds availability information to manufacturer's products
-  const productsWithAvailabilityArrays = await Promise.all(manufacturers.map(async (manufacturer) => {
+  productData = await getProductsWithAvailability(products, manufacturers);
+};
+
+const getProducts = async () => {
+  const productArrays = await Promise.all(productTypes.map(async (type) => {
+    const { data } = await axios.get<LegacyProduct[]>(`${baseURL}/products/${type}`);
+    return data.map(value => ({ ...value, availability: 'RETRIEVING' }));
+  }));
+  return productArrays.flat(1);
+};
+
+const getProductsWithAvailability = async (products: Product[], manufacturers: string[]) => {
+  const productArrays = await Promise.all(manufacturers.map(async (manufacturer) => {
+    // Retries until response is Array instead of "[]"
     while (true) {
-      const result = await axios.get<Availability>(`https://bad-api-assignment.reaktor.com/v2/availability/${manufacturer}`);
-      // Retries until response is Array instead of "[]"
-      if (typeof result.data.response === 'object') {
-        // Ignores values that are not found in products
-        // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/flatMap#For_adding_and_removing_items_during_a_map
-        const manufacturerProducts = result.data.response.flatMap((value) => {
-          const found = products.find(test => test.id === value.id.toLowerCase());
-          if (found) {
-            const availability = /(?<=<INSTOCKVALUE>).*?(?=<\/INSTOCKVALUE>)/.exec(value.DATAPAYLOAD);
-            if (availability) {
-              const object = {
-                ...found,
-                availability: availability[0]
-              };
-              return object;
-            }
-          }
-          return [];
-        });
-        return manufacturerProducts;
+      const { data } = await axios.get<Availability>(`${baseURL}/availability/${manufacturer}`);
+      if (typeof data.response === 'object') {
+        return availabilityToProducts(products, data);
       }
     }
   }));
-  const productsWithAvailability = productsWithAvailabilityArrays.flat(1);
-  productData = productsWithAvailability;
+  return productArrays.flat(1);
+};
+
+const availabilityToProducts = (products: Product[], availability: Availability) => {
+  // Ignores values that are not found
+  // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/flatMap#For_adding_and_removing_items_during_a_map
+  const manufacturerProducts = availability.response.flatMap((value) => {
+    const found = products.find(product => product.id === value.id.toLowerCase());
+    if (found) {
+      const availability = /(?<=<INSTOCKVALUE>).*?(?=<\/INSTOCKVALUE>)/.exec(value.DATAPAYLOAD);
+      if (availability) {
+        const object = {
+          ...found,
+          availability: availability[0]
+        };
+        return object;
+      }
+    }
+    return [];
+  });
+  return manufacturerProducts;
 };

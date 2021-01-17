@@ -7,3 +7,13 @@ export type Product = {
   manufacturer: string;
   availability: string;
 };
+
+export type LegacyProduct = Omit<Product, 'availability'>;
+
+export type Availability = {
+  code: number;
+  response: Array<{
+    id: string;
+    DATAPAYLOAD: string;
+  }>
+};
